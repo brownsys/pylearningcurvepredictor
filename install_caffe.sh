@@ -16,23 +16,22 @@ sudo apt-get -y install libgflags-dev libgoogle-glog-dev liblmdb-dev
 
 # caffe: clone repo
 git clone https://github.com/BVLC/caffe.git
-
-# Compile caffe
 cd caffe
+
+# adjust Makefile.config to only use CPU and not GPU 
 cp Makefile.config.example Makefile.config
-
-# Adjust Makefile.config (for example, if using Anaconda Python, or if cuDNN is desired)
 sed -i 's/# CPU_ONLY := 1/CPU_ONLY := 1/g' Makefile.config
-
-# prereq for pylearningcurvepredictor
-sudo apt-get -y install gfortran python-tk
 
 # install pycaffe dependencies
 cd python
 for req in $(cat requirements.txt); do sudo pip install $req; done
+cd -
 
-num_cores=`nproc`
-make all -j${num_cores}
+# prereq for pylearningcurvepredictor
+sudo apt-get -y install gfortran python-tk
+
+# make and test caffe and pycaffe
+make all -j`nproc`
 if [ $? != 0 ]; then echo "error: $?"; exit 1; fi
 make test
 if [ $? != 0 ]; then echo "error: $?"; exit 1; fi
@@ -41,5 +40,6 @@ if [ $? != 0 ]; then echo "error: $?"; exit 1; fi
 make pycaffe
 if [ $? != 0 ]; then echo "error: $?"; exit 1; fi
 
-export CAFFE_ROOT=/home/bs/caffe
+export CAFFE_ROOT=`pwd`
 export PYTHONPATH=${CAFFE_ROOT}/python:$PYTHONPATH
+echo "Set global var PYTHONPATH=$PYTHONPATH"
